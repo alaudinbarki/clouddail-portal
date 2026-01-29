@@ -1,0 +1,38 @@
+name: CloudDail Portal - CI/CD
+
+on:
+  push:
+    branches: [ main, staging, develop ]
+  pull_request:
+    branches: [ main, staging, develop ]
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy (${{ github.ref_name }})
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ vars.API_URL }}
+          VITE_ADMIN_TOKEN: ${{ secrets.ADMIN_PORTAL_TOKEN }}
+
+      - name: Deploy to Hosting
+        if: github.event_name == 'push'
+        run: |
+          # Deployment logic for Admin Portal
+          echo "Deploying Admin Portal to ${{ github.ref_name }}..."
